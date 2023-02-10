@@ -96,8 +96,6 @@ def getChangedPublicIps(currentPublicIps):
     with open("current_ips.json", "r") as f2:
         file2 = json.loads(f2.read())
 
-    message = "\nMERAKI WAN IP CHANGES\n\n"
-    print (message)
     message = ""
 
     for item in file2:
@@ -117,21 +115,19 @@ def getChangedPublicIps(currentPublicIps):
    
 
     if message == "":
-        print("No changes detected.\n\n")
+        print("No changes detected.")
     else:
         print(message + "\n\n")
 
-def checkReqs():
-    
-    if API_KEY is None and os.environ.get("MERAKI_API_KEY") is None:
-        raise Exception("Missing required environment variable MERAKI_API_KEY")
+def displayHeader():
+    message = "\nMERAKI WAN IP CHANGES\n\n"
+    print (message)
 
-    if ORG_ID is None and os.environ.get("MERAKI_ORG_ID") is None:
-        raise Exception("Missing required environment variable MERAKI_ORG_ID")
+def displayFooter():
+    message = "\n\n"
+    print (message)
 
 def main():
-
-    checkReqs()
 
     #get current wan public ips
     currentPublicIps = getPublicIps()
@@ -143,6 +139,10 @@ def main():
     if DEBUG:
         print(getOrganizations())
         print(currentPublicIps)
+
+################################################
+
+displayHeader()
 
 #get args
 #https://docs.python.org/3/library/argparse.html
@@ -159,8 +159,26 @@ if args.api_key:
     API_KEY = args.api_key
 if args.org_id:
     ORG_ID = args.org_id
-# if args.debug:
+
 DEBUG = args.debug
+
+if ORG_ID == "":
+    orgs = getOrganizations()
+    if len(orgs) > 1:
+        print("Multiple organizations detected. Please specify an organization ID with the --org-id argument or set env MERAKI_ORG_ID.")
+        for org in orgs:
+            print(org["id"] + " : " + org["name"])
+        displayFooter()
+        exit()
+    else:
+        ORG_ID = orgs[0]["id"]  
+
+if API_KEY == "":
+    print("No API Key specified. Please specify an organization ID with the --api-key argument or set env MERAKI_API_KEY.")
+    displayFooter()
+    exit()
 
 #run main
 main()
+
+displayFooter()
